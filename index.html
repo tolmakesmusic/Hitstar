@@ -56,7 +56,7 @@ let round = 0;
 document.write(correctYears.map((year,i)=>`
 <section class="round ${i===0?'active':''}" id="round-${i}">
   <div class="round-header">
-    <div class="round-number">Runde ${i+1} von ${correctYears.length}</div>
+    <div style="text-align: center; class="round-number">Runde ${i+1}</div>
     <h2 style="text-align: center; class="round-name">${roundNames[i]}</h2>
   </div>
   <div class="teams">
@@ -67,7 +67,7 @@ document.write(correctYears.map((year,i)=>`
       <div class="result" id="result1-${i}"></div>
     </div>
     <div class="team" id="team2-${i}">
-      <img class="team-photo" src="${teamImages[1]}" alt="Foto von ${teamNames[1]}">
+      <img class="team-photo" src="${teamImages[1]}" width="300" height="300" alt="Foto von ${teamNames[1]}">
       <h2>${teamNames[1]}</h2>
       <input id="answer2-${i}" type="number" inputmode="numeric" placeholder="Jahreszahl">
       <div class="result" id="result2-${i}"></div>
