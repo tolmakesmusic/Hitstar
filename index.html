@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spiel 6: Hitstar</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef1f5;color:#20242a}
+.container{max-width:1000px;margin:auto;padding:28px 18px}
+.game{background:#fff;border-radius:18px;padding:28px;box-shadow:0 8px 30px rgba(0,0,0,.10)}
+h1{text-align:center;margin:0 0 28px;font-size:clamp(28px,5vw,44px)}
+.round{display:none}
+.round.active{display:block}
+.teams{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.team{border:3px solid #d8dde4;border-radius:16px;padding:22px;text-align:center;transition:.2s}
+.team h2{margin:0 0 18px;font-size:clamp(22px,4vw,30px)}
+input{width:100%;padding:16px;border:2px solid #cfd5dc;border-radius:10px;font-size:24px;text-align:center}
+button{display:block;margin:28px auto 0;border:0;border-radius:11px;padding:15px 30px;background:#20242a;color:#fff;font-size:19px;font-weight:700;cursor:pointer}
+button:hover{opacity:.88}
+.result{display:none;margin-top:18px}
+.difference{font-size:30px;font-weight:800}
+.correct{font-size:21px;margin-top:8px;color:#555}
+.team.winner{background:#d9f3df;border-color:#35a853}
+.team.final-winner{background:#fff3b0;border-color:#d4af37;box-shadow:0 0 0 4px rgba(212,175,55,.22)}
+.scoreboard{margin-top:30px;padding:22px;border-radius:16px;background:#f4f6f8;border:2px solid #d8dde4;text-align:center}
+.scoreboard h2{margin:0 0 16px;font-size:28px}
+.scores{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.score{padding:16px;border-radius:12px;background:#fff;border:2px solid #d8dde4;font-size:24px;font-weight:800}
+.score.final-winner{background:#fff3b0;border-color:#d4af37;color:#5b4700}
+.finished{padding-bottom:10px}
+.team.loser{background:#ffdcdc;border-color:#e14b4b}
+.team.draw{background:#e3e5e8;border-color:#9da3aa}
+.finished{text-align:center;display:none}
+.finished h2{font-size:34px}
+@media(max-width:700px){.teams{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="game">
+
+<h1>Spiel 6: Hitstar</h1>
+
+<script>
+const correctYears = [2011,1988,2003,1993,1982,2013,1984,1995,2011,2008];
+const teamNames = ["Die Baddies","Die gestiefelten Muskelkater"];
+const teamImages = ["images/die-baddies.png","images/die-gestiefelten-muskelkater.png"];
+const roundNames = [
+  "Das erste Jahrzehnt",
+  "Zurück in die 80er",
+  "Millennium-Momente",
+  "Die 90er",
+  "Kult & Klassiker",
+  "2010er-Vibes",
+  "Zeitreise",
+  "Fast ein Vierteljahrhundert",
+  "Nochmal 2011",
+  "Das große Finale"
+];
+let round = 0;
+let scores = [0, 0];
+let gameOver = false;
+
+document.write(correctYears.map((year,i)=>`
+<section class="round ${i===0?'active':''}" id="round-${i}">
+  <div class="round-header">
+    <div style="text-align: center; class="round-number">Runde ${i+1}</div>
+    <h2 style="text-align: center; class="round-name">${roundNames[i]}</h2>
+  </div>
+  <div class="teams">
+    <div class="team" id="team1-${i}">
+      <img class="team-photo" src="${teamImages[0]}" width="300" height="300" alt="Foto von ${teamNames[0]}">
+      <h2>${teamNames[0]}</h2>
+      <input id="answer1-${i}" type="number" inputmode="numeric" placeholder="Jahreszahl">
+      <div class="result" id="result1-${i}"></div>
+    </div>
+    <div class="team" id="team2-${i}">
+      <img class="team-photo" src="${teamImages[1]}" width="300" height="300" alt="Foto von ${teamNames[1]}">
+      <h2>${teamNames[1]}</h2>
+      <input id="answer2-${i}" type="number" inputmode="numeric" placeholder="Jahreszahl">
+      <div class="result" id="result2-${i}"></div>
+    </div>
+  </div>
+  <button id="button-${i}" onclick="resolveRound(${i})">Auflösen</button>
+</section>
+`).join(""));
+</script>
+
+<div class="finished" id="finished">
+  <h2>Spiel beendet!</h2>
+  <p class="final-message" id="final-message"></p>
+  <div class="scoreboard">
+    <h2>Punktestand</h2>
+    <div class="scores">
+      <div class="score" id="final-score1"></div>
+      <div class="score" id="final-score2"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+function resolveRound(i){
+  if(gameOver) return;
+  round = i;
+  const a1 = Number(document.getElementById(`answer1-${i}`).value);
+  const a2 = Number(document.getElementById(`answer2-${i}`).value);
+  const correct = correctYears[i];
+
+  if(!Number.isFinite(a1) || !Number.isFinite(a2) ||
+     document.getElementById(`answer1-${i}`).value === "" ||
+     document.getElementById(`answer2-${i}`).value === ""){
+    alert("Bitte beide Jahreszahlen eingeben.");
+    return;
+  }
+
+  const d1 = Math.abs(a1-correct);
+  const d2 = Math.abs(a2-correct);
+
+  const t1 = document.getElementById(`team1-${i}`);
+  const t2 = document.getElementById(`team2-${i}`);
+
+  t1.classList.remove("winner","loser","draw");
+  t2.classList.remove("winner","loser","draw");
+
+  if(d1 < d2){
+    t1.classList.add("winner");
+    t2.classList.add("loser");
+    scores[0]++;
+  }else if(d2 < d1){
+    t2.classList.add("winner");
+    t1.classList.add("loser");
+    scores[1]++;
+  }else{
+    t1.classList.add("draw");
+    t2.classList.add("draw");
+  }
+
+  document.getElementById(`result1-${i}`).innerHTML =
+    `<div class="difference">Differenz: ${d1}</div>
+     <div class="correct">Richtige Jahreszahl: ${correct}</div>`;
+
+  document.getElementById(`result2-${i}`).innerHTML =
+    `<div class="difference">Differenz: ${d2}</div>
+     <div class="correct">Richtige Jahreszahl: ${correct}</div>`;
+
+  document.getElementById(`result1-${i}`).style.display="block";
+  document.getElementById(`result2-${i}`).style.display="block";
+
+  const button=document.getElementById(`button-${i}`);
+  updateScoreboard();
+  const draws = (i + 1) - scores[0] - scores[1];
+  const winsNeeded = Math.max(1, 6 - draws);
+  if(scores[0] >= winsNeeded || scores[1] >= winsNeeded){
+    finishGame(scores[0] > scores[1] ? 0 : 1);
+    return;
+  }
+  button.textContent = i === correctYears.length-1 ? "Spiel beenden" : "Nächste Runde";
+  button.onclick = () => nextRound(i);
+}
+
+function nextRound(i){
+  document.getElementById(`round-${i}`).classList.remove("active");
+  if(i+1 < correctYears.length){
+    document.getElementById(`round-${i+1}`).classList.add("active");
+    document.getElementById(`answer1-${i+1}`).focus();
+  }else{
+    const winner = scores[0] === scores[1] ? null : (scores[0] > scores[1] ? 0 : 1);
+    finishGame(winner);
+  }
+}
+
+function updateScoreboard(){
+  document.getElementById("final-score1").textContent = `${teamNames[0]}: ${scores[0]} Punkt${scores[0] === 1 ? "" : "e"}`;
+  document.getElementById("final-score2").textContent = `${teamNames[1]}: ${scores[1]} Punkt${scores[1] === 1 ? "" : "e"}`;
+}
+
+function finishGame(winner){
+  gameOver = true;
+  document.querySelectorAll(".round").forEach(r => r.classList.remove("active"));
+  document.querySelectorAll(".team").forEach(t => t.classList.remove("final-winner"));
+
+  if(winner !== null){
+    const currentTeam = document.getElementById(`team${winner + 1}-${round}`);
+    if(currentTeam) currentTeam.classList.add("final-winner");
+    document.getElementById("final-message").textContent =
+      `${teamNames[winner]} gewinnt mit ${scores[winner]} Rundensieg${scores[winner] === 1 ? "" : "en"}!`;
+    document.getElementById(`final-score${winner + 1}`).classList.add("final-winner");
+  }else{
+    document.getElementById("final-message").textContent = "Unentschieden – kein Siegerteam.";
+  }
+
+  updateScoreboard();
+  document.getElementById("finished").style.display="block";
+}
+</script>
+</body>
+</html>
